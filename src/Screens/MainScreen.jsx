@@ -1,12 +1,134 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import { topDoctors } from "../data";
+import Chatbot from "../Components/Chatbot";
 
 const MainScreen = () => {
   const [selectedSpecialization, setSelectedSpecialization] = useState("");
+  const token = localStorage.getItem("accessToken");
+  const [profile, setProfile] = useState(null);
+  const [healthConnect, setHealthConnect] = useState(null);
+  const [isChatOpen, setIsChatOpen] = useState(false); // State to track chatbox visibility
+
+  const navigate = useNavigate();
+
+  const onHandleLogout = () => {
+    localStorage.removeItem("accessToken");
+    navigate("/login");
+  };
+
+  const getprofile = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/profile", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        throw new Error("Failed to fetch profile");
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+      throw error;
+    }
+  };
+
+  const getHealthConnect = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/services", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        throw new Error("Failed to fetch health connect details");
+      }
+    } catch (error) {
+      console.error("Error fetching health connect details:", error);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      const fetchProfile = async () => {
+        try {
+          const data = await getprofile();
+          console.log("profile data:- ", data.message);
+          setProfile(data.message); // Update the profile state
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+          onHandleLogout();
+        }
+      };
+
+      fetchProfile();
+
+      const fetchHealthConnectDetails = async () => {
+        try {
+          const data = await getHealthConnect();
+          setHealthConnect(data);
+        } catch (error) {
+          console.error("Error fetching health connect details:", error);
+        }
+      };
+
+      fetchHealthConnectDetails();
+    }
+  }, [token]);
+
+  // Carousel settings for smooth continuous scrolling
+  const settings = {
+    dots: false, // Hide dots for a cleaner look
+    infinite: true, // Enable infinite loop
+    speed: 3000, // Transition speed in milliseconds
+    slidesToShow: 5, // Number of slides to show at once
+    slidesToScroll: 1, // Number of slides to scroll at a time
+    autoplay: true, // Enable autoplay
+    autoplaySpeed: 0, // Set to 0 for continuous scrolling
+    cssEase: "linear", // Use linear easing for smooth scrolling
+    pauseOnHover: false, // Disable pause on hover for continuous movement
+    responsive: [
+      {
+        breakpoint: 1024,
+        settings: {
+          slidesToShow: 2,
+          slidesToScroll: 1,
+        },
+      },
+      {
+        breakpoint: 600,
+        settings: {
+          slidesToShow: 1,
+          slidesToScroll: 1,
+        },
+      },
+    ],
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-100 via-green-100 to-yellow-100 text-gray-800">
-      {/* Header */}
-      <header className="bg-white shadow-md">
+    <div
+      className={`min-h-screen bg-gradient-to-r from-blue-100 via-green-100 to-yellow-100 text-gray-800 ${
+        isChatOpen ? "mr-96" : ""
+      }`}
+    >
+      {/* Fixed Header */}
+      <header className="fixed top-0 left-0 w-full bg-white shadow-md z-50">
         <div className="container mx-auto flex items-center justify-between px-6 py-4">
           <h1 className="text-3xl font-extrabold text-green-600">
             Health Connect
@@ -15,194 +137,94 @@ const MainScreen = () => {
             <a href="/" className="hover:text-green-600 font-medium">
               Home
             </a>
-            <a href="#services" className="hover:text-green-600 font-medium">
-              Services
-            </a>
-            <a href="#reviews" className="hover:text-green-600 font-medium">
-              Reviews
-            </a>
-            <a href="#contact" className="hover:text-green-600 font-medium">
-              Contact
-            </a>
-            <a
-              href="/login"
+            <button
+              onClick={onHandleLogout}
               className="bg-green-600 text-white px-6 py-2 rounded-full shadow hover:bg-green-500"
             >
               Logout
-            </a>
+            </button>
           </nav>
         </div>
       </header>
 
-      {/* Search Section */}
-      {/* <section className="bg-white py-8 shadow-md">
-        <div className="container mx-auto text-center">
-          <h2 className="text-2xl font-bold text-gray-700 mb-4">
-            Find Healthcare Services
-          </h2>
-          <input
-            type="text"
-            placeholder="Search for doctors, clinics, or services..."
-            className="w-full sm:w-2/3 lg:w-1/2 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400"
-          />
-        </div>
-      </section> */}
-
       {/* Main Content */}
-      <main className="container mx-auto px-6 sm:px-12 py-16">
+      <main className="container mx-auto px-6 sm:px-12 py-16 mt-20">
         {/* Hero Section */}
-        <section className="text-center">
-          <h2 className="text-4xl sm:text-5xl font-extrabold text-green-700 mb-6">
-            Welcome to Health Connect
-          </h2>
-          <p className="text-lg sm:text-xl text-gray-700 mb-12">
-            Connect with healthcare professionals and services at your
-            convenience.
-          </p>
-          {/* <button className="bg-green-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-green-500 transition duration-300">
-            Get Started
-          </button> */}
+        <section className=" items-center flex justify-between ">
+          <div className="">
+            <h2 className="text-4xl sm:text-5xl font-extrabold text-green-700 mb-6">
+              Welcome, {profile}
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-700 mb-12">
+              Manage your healthcare needs with ease.
+            </p>
+          </div>
+          {/* Chat Button */}
+          <button
+            onClick={() => setIsChatOpen(!isChatOpen)}
+            className="bg-green-600 text-white px-6 py-2 rounded-full shadow hover:bg-green-500"
+          >
+            {isChatOpen ? "Close Chat" : "Chat with Us"}
+          </button>
         </section>
+
+        {/* Top Doctors Carousel */}
+        <div className="mb-12 overflow-hidden">
+          <h3 className=" sm:text-xl text-3xl font-extrabold text-green-600 ml-auto text-center">
+            Top Doctors in India
+          </h3>
+          <Slider {...settings}>
+            {topDoctors.map((doctor) => (
+              <div key={doctor.id} className="px-2">
+                <div className=" bg-opacity-75 p-6 rounded-lg  text-center">
+                  <img
+                    src={doctor.photo}
+                    alt={doctor.name}
+                    className="w-32 h-32 mx-auto rounded-full mb-4"
+                  />
+                  <h3 className="text-xl font-semibold text-green-700">
+                    {doctor.name}
+                  </h3>
+                  <p className="text-gray-600">{doctor.specialization}</p>
+                </div>
+              </div>
+            ))}
+          </Slider>
+        </div>
 
         {/* Services Grid */}
-        <section
-          id="services"
-          className="mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-3"
-        >
-          {/* Book Appointments */}
-          <div className="p-8 bg-white shadow-lg rounded-lg hover:shadow-2xl transition duration-300">
-            <img
-              src="https://cdn.prod.website-files.com/6435a50900100d46cef36378/64978f8235188665501f2ea3_appointment%20costs.png"
-              alt="Book Appointments"
-              className="mx-auto mb-6 w-25 h-25 sm:w-36 sm:h-36 rounded-full"
-            />
-            <h3 className="text-2xl font-semibold text-green-700 mb-4">
-              Book Appointments
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Easily schedule your doctor visits and manage appointments.
-            </p>
-            <button className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-500">
-              Book Now
-            </button>
-          </div>
-
-          {/* Nearby Clinics */}
-          <div className="p-8 bg-white shadow-lg rounded-lg hover:shadow-2xl transition duration-300">
-            <img
-              src="https://img.freepik.com/premium-vector/clinic-hospital-location-icon-simple-editable-vector-graphics_996135-38468.jpg"
-              alt="Nearby Clinics"
-              className="mx-auto mb-6 w-25 h-25 sm:w-36 sm:h-36 rounded-full"
-            />
-            <h3 className="text-2xl font-semibold text-green-700 mb-4">
-              Nearby Clinics
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Find clinics and healthcare providers near you.
-            </p>
-            <button className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-500">
-              Find Clinics
-            </button>
-          </div>
-
-          {/* Emergency Services */}
-          <div className="p-8 bg-white shadow-lg rounded-lg hover:shadow-2xl transition duration-300">
-            <img
-              src="https://img.freepik.com/premium-vector/emergency-design_24908-44980.jpg"
-              alt="Emergency Services"
-              className="mx-auto mb-6 w-25 h-25 sm:w-36 sm:h-36 rounded-full"
-            />
-            <h3 className="text-2xl font-semibold text-red-600 mb-4">
-              Emergency Services
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Get immediate help in case of emergencies.
-            </p>
-            <button className="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-500">
-              Get Help
-            </button>
-          </div>
-        </section>
-
-        {/* Doctor Availability */}
         <section className="mt-16">
-          <h2 className="text-2xl font-bold text-green-700 mb-6">
-            Check Doctor Availability
-          </h2>
-          <div className="flex justify-between items-center mb-4">
-            <select
-              value={selectedSpecialization}
-              onChange={(e) => setSelectedSpecialization(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg"
-            >
-              <option value="">Select Specialization</option>
-              <option value="cardiologist">Cardiologist</option>
-              <option value="dermatologist">Dermatologist</option>
-              <option value="pediatrician">Pediatrician</option>
-              <option value="orthopedic">Orthopedic</option>
-            </select>
-            <button className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-500">
-              Filter
-            </button>
-          </div>
-          {/* Calendar */}
-          <div className="border p-4 rounded-lg">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">
-              Available Slots
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Available Slot */}
-              <div className="p-4 bg-white shadow-md rounded-lg">
-                <p className="text-lg font-semibold text-gray-700">
-                  Dr. John Doe
-                </p>
-                <p className="text-gray-600">Cardiologist</p>
-                <button className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-500">
-                  Book Slot
-                </button>
-              </div>
-              {/* Available Slot */}
-              <div className="p-4 bg-white shadow-md rounded-lg">
-                <p className="text-lg font-semibold text-gray-700">
-                  Dr. Jane Smith
-                </p>
-                <p className="text-gray-600">Dermatologist</p>
-                <button className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-500">
-                  Book Slot
-                </button>
-              </div>
-              {/* Available Slot */}
-              <div className="p-4 bg-white shadow-md rounded-lg">
-                <p className="text-lg font-semibold text-gray-700">
-                  Dr. Mark Lee
-                </p>
-                <p className="text-gray-600">Pediatrician</p>
-                <button className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-500">
-                  Book Slot
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Real-time Consultation */}
-        <section className="mt-16">
-          <h2 className="text-2xl font-bold text-green-700 mb-6">
-            Real-time Consultation
-          </h2>
-          <p className="text-gray-600 mb-4">
-            Consult your doctor via video call. Available slots are shown below.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="p-4 bg-white shadow-md rounded-lg">
-              <p className="text-lg font-semibold text-gray-700">
-                Dr. Sarah White
-              </p>
-              <p className="text-gray-600">Consultation via Video Call</p>
-              <button className="mt-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-500">
-                Start Consultation
-              </button>
-            </div>
+          <h3 className="text-3xl font-extrabold text-green-600 text-center mb-8">
+            Our Services
+          </h3>
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
+            {healthConnect &&
+              healthConnect.map((card) => (
+                <div
+                  key={card.id}
+                  className="p-8 bg-white shadow-lg rounded-lg hover:shadow-2xl transition duration-300"
+                >
+                  <img
+                    src={card.imageUrl}
+                    alt={card.title}
+                    className="mx-auto mb-6 w-25 h-25 sm:w-36 sm:h-36 rounded-full"
+                  />
+                  <h3 className="text-2xl font-semibold text-green-700 mb-4">
+                    {card.title}
+                  </h3>
+                  <p className="text-gray-600 mb-6">{card.description}</p>
+                  <button
+                    className={`${
+                      card.buttonColor
+                    } text-white px-4 py-2 rounded-full hover:${card.buttonColor.replace(
+                      "600",
+                      "500"
+                    )}`}
+                  >
+                    {card.buttonText}
+                  </button>
+                </div>
+              ))}
           </div>
         </section>
       </main>
@@ -213,6 +235,9 @@ const MainScreen = () => {
           <p>&copy; 2025 Health Connect, All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Chatbot */}
+      <Chatbot isOpen={isChatOpen} setIsOpen={setIsChatOpen} />
     </div>
   );
 };

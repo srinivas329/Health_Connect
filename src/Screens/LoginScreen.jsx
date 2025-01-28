@@ -13,30 +13,22 @@ const LoginPage = () => {
 
   const onHandleChange = (e) => {
     const { name, value } = e.target;
-    console.log(name, value);
     setUserCredentials({
       ...userCredentials,
       [name]: value,
     });
   };
 
-  console.log("login status:- ", loginStatus);
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    console.log("Form submitted");
-  };
-
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
-      const response = await fetch("http://localhost:3000/login", {
+      const response = await fetch("http://127.0.0.1:8000/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email: userCredentials.email,
+          username: userCredentials.email,
           password: userCredentials.password,
         }),
       });
@@ -44,9 +36,8 @@ const LoginPage = () => {
       if (response.ok) {
         const token = await response.json();
         setLoginStatus("");
-        localStorage.setItem("accessToken", token.accessToken);
+        localStorage.setItem("accessToken", token.access_token);
         navigate("/");
-        const data = await response.json();
       } else {
         const errorData = await response.json();
         setLoginStatus(errorData.error);
@@ -66,22 +57,22 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="bg-gradient-to-b from-blue-100 to-white flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-4xl bg-white shadow-md rounded-lg">
+    <div className="h-screen fixed bg-gradient-to-b w-[100%] from-blue-100 to-white flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl bg-white shadow-md rounded-lg overflow-hidden">
         <div className="grid grid-cols-1 md:grid-cols-2">
           {/* Logo Section */}
-          <div className="flex flex-col items-center justify-center bg-blue-600 text-white p-8">
+          <div className="flex flex-col items-center justify-center bg-green-600 text-white p-8">
             <h2 className="text-4xl font-bold">Health Connect</h2>
             <p className="text-sm mt-2">Your Hospital Management Solution</p>
           </div>
 
           {/* Form Section */}
-          <div className="p-4 flex flex-col justify-center">
+          <div className="p-8 flex flex-col justify-center">
             <div className="grid w-full grid-cols-2 mb-4">
               <button
                 className={`py-2 text-center ${
                   activeTab === "login"
-                    ? "border-b-2 border-blue-600"
+                    ? "border-b-2 border-green-600"
                     : "text-gray-600"
                 }`}
                 onClick={() => setActiveTab("login")}
@@ -91,7 +82,7 @@ const LoginPage = () => {
               <button
                 className={`py-2 text-center ${
                   activeTab === "register"
-                    ? "border-b-2 border-blue-600"
+                    ? "border-b-2 border-green-600"
                     : "text-gray-600"
                 }`}
                 onClick={() => setActiveTab("register")}
@@ -101,7 +92,7 @@ const LoginPage = () => {
             </div>
 
             {activeTab === "login" && (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <label
                     htmlFor="email"
@@ -111,7 +102,7 @@ const LoginPage = () => {
                   </label>
                   <input
                     id="email"
-                    type="email"
+                    type="test"
                     name="email"
                     placeholder="m@example.com"
                     onChange={onHandleChange}
@@ -142,8 +133,7 @@ const LoginPage = () => {
                 </p>
                 <button
                   type="submit"
-                  onClick={handleLogin}
-                  className="w-full px-4 py-2 rounded-md focus:outline-none focus:ring bg-blue-600 hover:bg-transparent text-white border hover:border-blue-600 hover:text-blue-600"
+                  className="w-full px-4 py-2 rounded-md focus:outline-none focus:ring bg-green-600 hover:bg-transparent text-white border hover:border-green-600 hover:text-green-600"
                 >
                   Login
                 </button>
@@ -151,7 +141,7 @@ const LoginPage = () => {
             )}
 
             {activeTab === "register" && (
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleRegister} className="space-y-4">
                 <div className="space-y-2">
                   <label
                     htmlFor="name"
@@ -197,8 +187,7 @@ const LoginPage = () => {
                 </div>
                 <button
                   type="submit"
-                  onClick={handleRegister}
-                  className="w-full px-4 py-2 rounded-md focus:outline-none focus:ring bg-blue-600 hover:bg-transparent text-white border hover:border-blue-600 hover:text-blue-600"
+                  className="w-full px-4 py-2 rounded-md focus:outline-none focus:ring bg-green-600 hover:bg-transparent text-white border hover:border-green-600 hover:text-green-600"
                 >
                   Register
                 </button>
@@ -217,9 +206,8 @@ const LoginPage = () => {
                 </div>
               </div>
               <button
-                variant="outline"
-                className="w-full"
                 onClick={handleGoogleLogin}
+                className="w-full px-4 py-2 rounded-md focus:outline-none focus:ring bg-white border border-gray-300 hover:bg-gray-100 flex items-center justify-center"
               >
                 <svg
                   className="mr-2 h-4 w-4"
